@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurum Digital Banking — Academic CIA-3 Management System</title>
+  <meta name="description" content="Digital Banking Account & Transaction Management System built with Node.js, Express.js, and MongoDB Mongoose.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Global Application Header -->
+  <header class="app-header">
+    <div class="brand-area">
+      <div class="brand-logo">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="brand-info">
+        <h1>AURUM DIGITAL BANK</h1>
+        <div class="brand-badge">
+          <span class="status-dot"></span>
+          <span>CIA-3 Core API Online (:5001)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Role Switcher (Academic Evaluation Toolbar) -->
+    <div class="persona-switcher">
+      <span class="switcher-label">Demo Logins:</span>
+      <button class="persona-btn active" onclick="switchPersona('alice')">Alice (Customer)</button>
+      <button class="persona-btn" onclick="switchPersona('bob')">Bob (Customer)</button>
+      <button class="persona-btn" onclick="switchPersona('charlie')">Charlie (KYC Pending)</button>
+      <button class="persona-btn" onclick="switchPersona('staff')">Staff Officer</button>
+      <button class="persona-btn" onclick="switchPersona('admin')">Super Admin</button>
+    </div>
+
+    <div class="header-actions">
+      <div class="user-pill" id="userPill">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-meta">
+          <span class="user-meta-name" id="userName">Alice Johnson</span>
+          <span class="user-meta-role" id="userRole">CUSTOMER • KYC APPROVED</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="openLoginModal()" id="loginBtn">Switch Account</button>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="nav-container">
+    <div class="nav-tabs" id="navTabs">
+      <!-- Injected dynamically based on active user role -->
+    </div>
+  </nav>
+
+  <!-- Main Workspace -->
+  <main class="main-wrapper">
+    <!-- View 1: Customer Accounts -->
+    <section id="view-customer-accounts" class="view-section active">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>My Accounts & Balances</h2>
+          <p>Real-time banking accounts, daily limits, and ledger balances.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openNewAccountModal()">+ Open New Account</button>
+      </div>
+
+      <div class="accounts-grid" id="accountsGrid">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- View 2: Customer Fund Transfer -->
+    <section id="view-customer-transfer" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>Fund Transfer Engine</h2>
+          <p>Instant atomic debit & credit transfer with real-time minimum balance & daily limit validation.</p>
+        </div>
+      </div>
+
+      <div style="max-width: 680px; margin: 0 auto;">
+        <div class="table-card" style="padding: 2rem;">
+          <form id="transferForm" onsubmit="handleTransferSubmit(event)">
+            <div class="form-group">
+              <label class="form-label">Source Account (Debit)</label>
+              <select id="transferSourceAccount" class="form-control" required></select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Recipient Account Number (10 Digits)</label>
+              <input type="text" id="transferDestinationNumber" class="form-control" placeholder="e.g. 1099222001" required>
+              <div style="margin-top: 8px;">
+                <span style="font-size: 0.75rem; color: var(--text-dim); display: block; margin-bottom: 4px;">Click to quick-fill active bank account:</span>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('transferDestinationNumber').value='1099222001'">Bob (1099222001)</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('transferDestinationNumber').value='2088991002'">Alice Current (2088991002)</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('transferDestinationNumber').value='1088991001'">Alice Savings (1088991001)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Transfer Amount ($)</label>
+              <input type="number" id="transferAmount" class="form-control" placeholder="0.00" min="1" step="0.01" required>
+              <span style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; display: block;">
+                * Amounts ≥ $50,000 will be automatically flagged for AML compliance review.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Payment Description / Remarks</label>
+              <input type="text" id="transferDescription" class="form-control" placeholder="e.g. Consulting Invoice settlement">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem;" id="transferSubmitBtn">
+              Execute Atomic Transfer
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 3: Beneficiary Management -->
+    <section id="view-customer-beneficiaries" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>Beneficiary Registry</h2>
+          <p>Manage verified transfer counterparties tied to your accounts.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddBeneficiaryModal()">+ Add Beneficiary</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Beneficiary Name</th>
+                <th>Nickname</th>
+                <th>Account Number</th>
+                <th>Tied Account</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="beneficiariesTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 4: Account Statement & Ledger -->
+    <section id="view-customer-statement" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>Account Statement & Financial Ledger</h2>
+          <p>Query immutable append-only ledger entries and aggregate financial flow.</p>
+        </div>
+      </div>
+
+      <div class="table-card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="margin-bottom: 0; min-width: 220px;">
+            <label class="form-label">Select Account</label>
+            <select id="statementAccountSelect" class="form-control" onchange="fetchStatement()"></select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">From Date</label>
+            <input type="date" id="statementFromDate" class="form-control">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">To Date</label>
+            <input type="date" id="statementToDate" class="form-control">
+          </div>
+          <button class="btn btn-secondary" onclick="fetchStatement()">Generate Statement</button>
+        </div>
+      </div>
+
+      <!-- Statement Financial Summary Cards -->
+      <div class="stats-grid" id="statementSummaryGrid" style="display: none;">
+        <div class="stat-card">
+          <div class="stat-title">Opening Balance</div>
+          <div class="stat-value" id="statementOpening">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Total Credits</div>
+          <div class="stat-value" id="statementCredits" style="color: var(--success);">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Total Debits</div>
+          <div class="stat-value" id="statementDebits" style="color: var(--danger);">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Closing Balance</div>
+          <div class="stat-value" id="statementClosing" style="color: var(--info);">$0.00</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <h3>Ledger Audit Records (Immutable)</h3>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Counterparty</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Balance After</th>
+                <th>AML Flag</th>
+              </tr>
+            </thead>
+            <tbody id="statementTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 5: Staff Dashboard & KPIs -->
+    <section id="view-staff-dashboard" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>Bank Staff Monitoring Dashboard</h2>
+          <p>Institutional oversight, KYC tracking, AML flags, and bank liquidity metrics.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-primary" onclick="openInterestModal()">Run Interest Job</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="staffStatsGrid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Total Bank Deposits</span>
+            <div class="stat-icon success">💰</div>
+          </div>
+          <div class="stat-value" id="staffTotalDeposits">$0.00</div>
+          <div class="stat-subtext">Across all active accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Accounts Under Review</span>
+            <div class="stat-icon warning">⏳</div>
+          </div>
+          <div class="stat-value" id="staffPendingCount">0</div>
+          <div class="stat-subtext">Pending staff approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">AML Flagged Transfers</span>
+            <div class="stat-icon danger">🚩</div>
+          </div>
+          <div class="stat-value" id="staffFlaggedCount">0</div>
+          <div class="stat-subtext">Breaching $50k threshold</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">KYC Pending Users</span>
+            <div class="stat-icon info">👤</div>
+          </div>
+          <div class="stat-value" id="staffKycCount">0</div>
+          <div class="stat-subtext">Awaiting identity review</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 6: Pending Account Approvals (Staff) -->
+    <section id="view-staff-approvals" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>Account Approval Pipeline</h2>
+          <p>Review customer applications and execute approval/rejection decisions.</p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Account Number</th>
+                <th>Applicant Name</th>
+                <th>Applicant Email</th>
+                <th>Type</th>
+                <th>Initial Deposit</th>
+                <th>Status</th>
+                <th>Decision Action</th>
+              </tr>
+            </thead>
+            <tbody id="pendingApprovalsTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 7: AML Flagged Transactions (Staff) -->
+    <section id="view-staff-aml" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>AML Suspicious Transactions Monitor</h2>
+          <p>Audit trail of transactions automatically flagged for exceeding the $50,000 threshold.</p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Account Number</th>
+                <th>Customer Name</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Related Account</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="amlTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 8: Account Freeze & Management (Staff) -->
+    <section id="view-staff-freeze" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>Account Freeze / Unfreeze Controls</h2>
+          <p>Staff administrative controls to freeze high-risk accounts and prohibit all fund transfers.</p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Account Number</th>
+                <th>Owner Name</th>
+                <th>Account Type</th>
+                <th>Current Balance</th>
+                <th>Status</th>
+                <th>Administrative Action</th>
+              </tr>
+            </thead>
+            <tbody id="allAccountsTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 9: Admin & RBAC Management -->
+    <section id="view-admin-users" class="view-section">
+      <div class="page-title-row">
+        <div class="page-title-text">
+          <h2>User Directory & RBAC Administration</h2>
+          <p>Super Administrator controls: provision bank staff, review KYC statuses, and update roles.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateStaffModal()">+ Provision Staff Officer</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>System Role</th>
+                <th>KYC Status</th>
+                <th>Document Details</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live API Inspector Card (Always accessible) -->
+    <div class="inspector-card">
+      <div class="inspector-header">
+        <span class="inspector-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Live API Inspector (Real-time Backend JSON Envelopes)
+        </span>
+        <span id="inspectorStatus" class="status-badge active">READY</span>
+      </div>
+      <pre class="inspector-body" id="inspectorBody">// API Request and Response inspector ready.
+// Click any action or demo persona above to see live backend JSON envelopes.</pre>
+    </div>
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- Modal: Open New Account -->
+  <div class="modal-backdrop" id="modalNewAccount">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Open Bank Account</h3>
+        <button class="modal-close" onclick="closeModal('modalNewAccount')">&times;</button>
+      </div>
+      <form onsubmit="handleNewAccountSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Account Type</label>
+            <select id="newAccountType" class="form-control" required>
+              <option value="savings">Savings Account (Min Balance: $1,000 | Daily Limit: $50,000)</option>
+              <option value="current">Current Account (Min Balance: $5,000 | Daily Limit: $200,000)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Opening Deposit ($)</label>
+            <input type="number" id="newAccountDeposit" class="form-control" placeholder="1000" min="0" step="0.01" value="5000">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalNewAccount')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Application</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Beneficiary -->
+  <div class="modal-backdrop" id="modalAddBeneficiary">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Register Beneficiary</h3>
+        <button class="modal-close" onclick="closeModal('modalAddBeneficiary')">&times;</button>
+      </div>
+      <form onsubmit="handleAddBeneficiarySubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Your Source Account</label>
+            <select id="beneficiarySourceAccount" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Beneficiary Account Number (10 Digits)</label>
+            <input type="text" id="beneficiaryAccountNumber" class="form-control" placeholder="Enter valid 10-digit account number" required>
+            <div style="margin-top: 8px;">
+              <span style="font-size: 0.75rem; color: var(--text-dim); display: block; margin-bottom: 4px;">Click a known demo account to auto-fill:</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillBeneficiaryQuick('1099222001', 'Bob Smith', 'Bob Savings')">Bob (1099222001)</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillBeneficiaryQuick('2088991002', 'Alice Johnson', 'Alice Current')">Alice Current (2088991002)</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillBeneficiaryQuick('1055665001', 'Eve Adams', 'Eve Savings')">Eve (1055665001)</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Beneficiary Full Name</label>
+            <input type="text" id="beneficiaryFullName" class="form-control" placeholder="e.g. Bob Smith" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nickname</label>
+            <input type="text" id="beneficiaryNickname" class="form-control" placeholder="e.g. Bob Savings" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalAddBeneficiary')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Decide Account (Staff) -->
+  <div class="modal-backdrop" id="modalDecideAccount">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Account Decision Workflow</h3>
+        <button class="modal-close" onclick="closeModal('modalDecideAccount')">&times;</button>
+      </div>
+      <form onsubmit="handleAccountDecisionSubmit(event)">
+        <input type="hidden" id="decideAccountId">
+        <div class="modal-body">
+          <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);" id="decideAccountDetails">
+            Reviewing application...
+          </p>
+          <div class="form-group">
+            <label class="form-label">Decision</label>
+            <select id="decideDecision" class="form-control" required>
+              <option value="approved">Approve Account</option>
+              <option value="rejected">Reject Account</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Staff Compliance Remarks</label>
+            <textarea id="decideRemarks" class="form-control" rows="3" placeholder="e.g. Verified KYC credentials, opening balance cleared."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalDecideAccount')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm Decision</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Calculate Interest (Staff) -->
+  <div class="modal-backdrop" id="modalInterestJob">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Savings Interest Calculation Job</h3>
+        <button class="modal-close" onclick="closeModal('modalInterestJob')">&times;</button>
+      </div>
+      <form onsubmit="handleInterestJobSubmit(event)">
+        <div class="modal-body">
+          <p style="margin-bottom: 1rem; font-size: 0.88rem; color: var(--text-muted);">
+            Computes simple interest across all active savings accounts and posts credit ledger records.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Annual Interest Rate (e.g. 0.04 = 4% p.a.)</label>
+            <input type="number" id="interestRate" class="form-control" step="0.005" min="0.005" max="0.3" value="0.04" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Calculation Period (Days)</label>
+            <input type="number" id="interestPeriodDays" class="form-control" min="1" max="365" value="30" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalInterestJob')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Run Interest Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Provision Staff Officer (Admin) -->
+  <div class="modal-backdrop" id="modalCreateStaff">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Provision Staff Officer Account</h3>
+        <button class="modal-close" onclick="closeModal('modalCreateStaff')">&times;</button>
+      </div>
+      <form onsubmit="handleCreateStaffSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="staffName" class="form-control" placeholder="Officer Name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="staffEmail" class="form-control" placeholder="officer@bank.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Password</label>
+            <input type="password" id="staffPassword" class="form-control" value="Password123!" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role Privilege</label>
+            <select id="staffRole" class="form-control" required>
+              <option value="staff">Bank Staff Officer</option>
+              <option value="admin">System Administrator</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalCreateStaff')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Client Application Script -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

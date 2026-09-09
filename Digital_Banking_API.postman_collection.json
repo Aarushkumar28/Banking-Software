@@ -1,0 +1,957 @@
+{
+  "info": {
+    "_postman_id": "9b12e345-789a-4bc0-9876-543210fedcba",
+    "name": "Digital Banking Account & Transaction Management System (CIA-3)",
+    "description": "Comprehensive API collection for the Digital Banking Backend covering all 13 modules, including happy paths, validation failures (400), authentication failures (401), authorization/ownership failures (403), not found errors (404), and business rule conflicts (409).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "staffToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customer1Token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customer2Token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "account1Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "account2Number",
+      "value": "1099222001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Auth & Customer Onboarding",
+      "item": [
+        {
+          "name": "1.1 Register Customer (Happy Path - 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Connor\",\n  \"email\": \"sarah@cyberdyne.com\",\n  \"password\": \"Password123!\",\n  \"kycDetails\": {\n    \"documentType\": \"passport\",\n    \"documentNumber\": \"P998822\",\n    \"phone\": \"+1-555-4321\",\n    \"address\": \"420 Resistance Rd, Los Angeles, CA\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Register Customer - Validation Failure (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"S\",\n  \"email\": \"not-an-email\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Register Customer - Duplicate Email Conflict (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate User\",\n  \"email\": \"alice@customer.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Login Customer (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "  pm.collectionVariables.set('customer1Token', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@customer.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.5 Login Staff (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "  pm.collectionVariables.set('staffToken', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff@bank.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.6 Login Admin (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "  pm.collectionVariables.set('adminToken', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@bank.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.7 Login - Invalid Credentials (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@customer.com\",\n  \"password\": \"WrongPassword!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.8 Get User Profile (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "1.9 Get Profile - Missing Token (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Account Management & KYC Verification",
+      "item": [
+        {
+          "name": "2.1 Create Account - KYC Pending (Forbidden - 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer2Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"savings\",\n  \"initialDeposit\": 5000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Staff Approves Customer KYC (Happy Path - 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kycStatus\": \"approved\",\n  \"remarks\": \"Verified government ID card and address proofs.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/users/{{userId}}/kyc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "users", "{{userId}}", "kyc"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Create Account - KYC Approved (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.account) {",
+                  "  pm.collectionVariables.set('account1Id', jsonData.data.account.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"savings\",\n  \"initialDeposit\": 10000,\n  \"dailyTransferLimit\": 50000,\n  \"minBalance\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "2.4 Create Account - Invalid Type Validation Failure (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"crypto_wallet\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "2.5 List My Accounts (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "2.6 Get Account By ID (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{account1Id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{account1Id}}"]
+            }
+          }
+        },
+        {
+          "name": "2.7 Get Account By ID - Other User's Account (Forbidden - 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer2Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{account1Id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{account1Id}}"]
+            }
+          }
+        },
+        {
+          "name": "2.8 Get Non-Existent Account (Not Found - 404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/60c72b2f9b1d8b2bad8e9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "60c72b2f9b1d8b2bad8e9999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Account Approval Workflow",
+      "item": [
+        {
+          "name": "3.1 Staff Approves Pending Account (Happy Path - 200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approved\",\n  \"remarks\": \"Applicant KYC checks passed. Account approved.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/accounts/{{account1Id}}/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "accounts", "{{account1Id}}", "approval"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Re-Approve Already Decided Account (Conflict - 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"rejected\",\n  \"remarks\": \"Attempting to re-decide already active account.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/accounts/{{account1Id}}/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "accounts", "{{account1Id}}", "approval"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Customer Attempts Account Approval (Forbidden - 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/accounts/{{account1Id}}/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "accounts", "{{account1Id}}", "approval"]
+            }
+          }
+        },
+        {
+          "name": "3.4 List Pending Approvals (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/pending-approvals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "pending-approvals"]
+            }
+          }
+        },
+        {
+          "name": "3.5 View Account Approval History (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{account1Id}}/approvals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{account1Id}}", "approvals"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Beneficiary Management",
+      "item": [
+        {
+          "name": "4.1 Add Beneficiary (Happy Path - 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{account1Id}}\",\n  \"beneficiaryAccountNumber\": \"{{account2Number}}\",\n  \"nickname\": \"Bob Savings\",\n  \"beneficiaryName\": \"Bob Smith\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/beneficiaries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "beneficiaries"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Add Own Account as Beneficiary (Conflict - 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{account1Id}}\",\n  \"beneficiaryAccountNumber\": \"1088991001\",\n  \"nickname\": \"Self Account\",\n  \"beneficiaryName\": \"Alice Johnson\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/beneficiaries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "beneficiaries"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Add Duplicate Beneficiary (Conflict - 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{account1Id}}\",\n  \"beneficiaryAccountNumber\": \"{{account2Number}}\",\n  \"nickname\": \"Bob Duplicate\",\n  \"beneficiaryName\": \"Bob Smith\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/beneficiaries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "beneficiaries"]
+            }
+          }
+        },
+        {
+          "name": "4.4 List Beneficiaries (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/beneficiaries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "beneficiaries"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Fund Transfer Engine & Limits",
+      "item": [
+        {
+          "name": "5.1 Transfer Funds (Happy Path - 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"{{account2Number}}\",\n  \"amount\": 1500,\n  \"description\": \"Invoice settlement #1024\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Transfer Violating Min Balance (Conflict - 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"{{account2Number}}\",\n  \"amount\": 999999,\n  \"description\": \"Way too much money\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "5.3 Transfer Exceeding Daily Limit (Conflict - 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"{{account2Number}}\",\n  \"amount\": 55000,\n  \"description\": \"Exceeds 50,000 daily limit\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "5.4 Transfer with Negative Amount (Validation Failure - 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"{{account2Number}}\",\n  \"amount\": -250\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "5.5 Transfer to Non-Existent Account (Not Found - 404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"9999999999\",\n  \"amount\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "5.6 Large Transfer Auto-Flagged as Suspicious (Happy Path - 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"{{account2Number}}\",\n  \"amount\": 50000,\n  \"description\": \"Large strategic payment\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Ledger & Statement Generation",
+      "item": [
+        {
+          "name": "6.1 View Account Ledger (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/account/{{account1Id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "account", "{{account1Id}}"]
+            }
+          }
+        },
+        {
+          "name": "6.2 Generate Account Statement (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{account1Id}}/statement?from=2026-01-01&to=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{account1Id}}", "statement"],
+              "query": [
+                { "key": "from", "value": "2026-01-01" },
+                { "key": "to", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.3 Statement - Invalid Date Query (Validation Failure - 400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{account1Id}}/statement?from=invalid-date",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{account1Id}}", "statement"],
+              "query": [
+                { "key": "from", "value": "invalid-date" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Account Freeze & Unfreeze",
+      "item": [
+        {
+          "name": "7.1 Staff Freezes Account (Happy Path - 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Suspicious rapid transfers detected. Temporary compliance hold.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/accounts/{{account1Id}}/freeze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "accounts", "{{account1Id}}", "freeze"]
+            }
+          }
+        },
+        {
+          "name": "7.2 Transfer Attempt From Frozen Account (Forbidden - 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{account1Id}}\",\n  \"destinationAccountNumber\": \"{{account2Number}}\",\n  \"amount\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "7.3 Staff Unfreezes Account (Happy Path - 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/accounts/{{account1Id}}/unfreeze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "accounts", "{{account1Id}}", "unfreeze"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Interest Calculation Job",
+      "item": [
+        {
+          "name": "8.1 Trigger Savings Interest Calculation (Happy Path - 200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annualRate\": 0.04,\n  \"periodDays\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/jobs/calculate-interest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "jobs", "calculate-interest"]
+            }
+          }
+        },
+        {
+          "name": "8.2 Customer Tries to Run Interest Job (Forbidden - 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/jobs/calculate-interest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "jobs", "calculate-interest"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09. Staff Monitoring Dashboard",
+      "item": [
+        {
+          "name": "9.1 View Flagged Transactions (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/flagged-transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "flagged-transactions"]
+            }
+          }
+        },
+        {
+          "name": "9.2 View Staff Dashboard Statistics (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/dashboard-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "dashboard-stats"]
+            }
+          }
+        },
+        {
+          "name": "9.3 Customer Tries Accessing Staff Dashboard (Forbidden - 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer1Token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff/dashboard-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff", "dashboard-stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Admin & RBAC Management",
+      "item": [
+        {
+          "name": "10.1 Admin Creates Staff Account (Happy Path - 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Compliance Officer Lee\",\n  \"email\": \"officer.lee@bank.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"staff\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff"]
+            }
+          }
+        },
+        {
+          "name": "10.2 Staff Attempts Admin Staff Creation (Forbidden - 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Staff\",\n  \"email\": \"fake.officer@bank.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"staff\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff"]
+            }
+          }
+        },
+        {
+          "name": "10.3 Admin Lists All Users (Happy Path - 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?role=customer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                { "key": "role", "value": "customer" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "10.4 Admin Updates User Role (Happy Path - 200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"staff\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "role"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
