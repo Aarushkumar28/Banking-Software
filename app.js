@@ -16,23 +16,11 @@ const errorHandler = require('./middleware/errorHandler');
 const { AppError, sendSuccess } = require('./utils/apiResponse');
 
 const path = require('path');
+const mongoose = require('mongoose');
 
 const { connectDB } = require('./config/db');
 
 const app = express();
-
-// Serverless DB connection middleware (ensures connection in serverless runtime, no-op in tests)
-app.use(async (req, res, next) => {
-  if (process.env.NODE_ENV === 'test' || mongoose.connection.readyState === 1) {
-    return next();
-  }
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
 
 // Security and utility middleware
 app.use(
@@ -44,19 +32,33 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend UI assets
+// Serve static frontend UI assets immediately without waiting for DB
 app.use(express.static(path.join(__dirname, 'public')));
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Health check endpoint
+// Health check endpoint (serves immediately)
 app.get('/api/health', (req, res) => {
   return sendSuccess(res, 200, 'Digital Banking API is healthy and operational.', {
     uptime: process.uptime(),
+    dbConnected: mongoose.connection.readyState === 1,
     timestamp: new Date().toISOString(),
   });
+});
+
+// Serverless DB connection middleware (scoped to API data routes)
+app.use('/api', async (req, res, next) => {
+  if (process.env.NODE_ENV === 'test' || mongoose.connection.readyState === 1) {
+    return next();
+  }
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // API Routes

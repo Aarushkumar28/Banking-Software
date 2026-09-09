@@ -30,9 +30,6 @@ const connectDB = async (customUri = null) => {
   } catch (error) {
     cached.promise = null;
     console.error(`[Database] Connection Error: ${error.message}`);
-    if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-      process.exit(1);
-    }
     throw error;
   }
 };

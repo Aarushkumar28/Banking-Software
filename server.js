@@ -11,16 +11,16 @@ process.on('uncaughtException', (err) => {
 let server;
 
 const startServer = async () => {
+  server = app.listen(env.PORT, () => {
+    console.log(`[Server] Digital Banking API running on http://localhost:${env.PORT}`);
+    console.log(`[Server] Environment: ${env.NODE_ENV}`);
+  });
+
   try {
     await connectDB();
-
-    server = app.listen(env.PORT, () => {
-      console.log(`[Server] Digital Banking API running on http://localhost:${env.PORT}`);
-      console.log(`[Server] Environment: ${env.NODE_ENV}`);
-    });
   } catch (error) {
-    console.error('[Server] Failed to initialize server:', error.message);
-    process.exit(1);
+    console.error('[Server] Database initial connection failed:', error.message);
+    console.log('[Server] Server remains active. Reconnect will be attempted on incoming requests.');
   }
 };
 
