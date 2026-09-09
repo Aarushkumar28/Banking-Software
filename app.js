@@ -17,7 +17,22 @@ const { AppError, sendSuccess } = require('./utils/apiResponse');
 
 const path = require('path');
 
+const { connectDB } = require('./config/db');
+
 const app = express();
+
+// Serverless DB connection middleware (ensures connection in serverless runtime, no-op in tests)
+app.use(async (req, res, next) => {
+  if (process.env.NODE_ENV === 'test' || mongoose.connection.readyState === 1) {
+    return next();
+  }
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Security and utility middleware
 app.use(
