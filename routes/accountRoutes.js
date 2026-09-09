@@ -87,4 +87,10 @@ router.get(
   approvalController.getAccountApprovals
 );
 
+// Clear all rejected accounts for authenticated customer
+router.delete('/rejected/clear', authenticate, accountController.clearRejectedAccounts);
+
+// Remove single rejected account application (Ownership-checked)
+router.delete('/:id', authenticate, accountController.deleteAccount);
+
 module.exports = router;

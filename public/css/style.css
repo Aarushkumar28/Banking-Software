@@ -664,6 +664,57 @@ tr:hover td {
   border-radius: 6px;
 }
 
+.btn-outline-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.btn-outline-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.account-card.rejected {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: linear-gradient(135deg, rgba(35, 20, 25, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+
+.account-card.rejected:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+}
+
+.btn-card-dismiss {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-radius: var(--radius-full);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: bold;
+  transition: var(--transition);
+}
+
+.btn-card-dismiss:hover {
+  background: var(--danger);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.card-remove-anim {
+  opacity: 0 !important;
+  transform: scale(0.9) translateY(10px) !important;
+  transition: all 0.25s ease-out !important;
+}
+
 /* Forms & Inputs */
 .form-group {
   margin-bottom: 1.25rem;

@@ -63,7 +63,18 @@
           <h2>My Accounts & Balances</h2>
           <p>Real-time banking accounts, daily limits, and ledger balances.</p>
         </div>
-        <button class="btn btn-primary" onclick="openNewAccountModal()">+ Open New Account</button>
+        <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-outline-danger btn-sm" id="clearRejectedBtn" style="display: none;" onclick="clearAllRejectedAccounts()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+            </svg>
+            Remove All Rejected (<span id="rejectedCountBadge">0</span>)
+          </button>
+          <button class="btn btn-secondary btn-sm" id="toggleRejectedBtn" style="display: none;" onclick="toggleHideRejected()">
+            👁️ <span id="toggleRejectedText">Hide Rejected</span>
+          </button>
+          <button class="btn btn-primary" onclick="openNewAccountModal()">+ Open New Account</button>
+        </div>
       </div>
 
       <div class="accounts-grid" id="accountsGrid">

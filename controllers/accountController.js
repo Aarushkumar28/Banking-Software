@@ -127,8 +127,56 @@ const getAccountById = async (req, res, next) => {
   }
 };
 
+/**
+ * Remove/Dismiss a rejected or pending account application.
+ */
+const deleteAccount = async (req, res, next) => {
+  try {
+    const account = await Account.findById(req.params.id);
+    if (!account) {
+      throw new AppError('Bank account not found.', 404, 'ACCOUNT_NOT_FOUND');
+    }
+
+    // Ownership check (unless admin)
+    if (req.user.role !== 'admin' && account.userId.toString() !== req.user.id) {
+      throw new AppError('Access denied: You do not own this account.', 403, 'FORBIDDEN');
+    }
+
+    // Only allow removing rejected or pending accounts
+    if (account.status !== 'rejected' && account.status !== 'pending') {
+      throw new AppError('Only rejected or pending account applications can be removed.', 400, 'CANNOT_DELETE_ACTIVE_ACCOUNT');
+    }
+
+    await Account.findByIdAndDelete(req.params.id);
+
+    return sendSuccess(res, 200, 'Account application removed successfully.', {
+      accountId: req.params.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Bulk clear all rejected accounts for the current user.
+ */
+const clearRejectedAccounts = async (req, res, next) => {
+  try {
+    const filter = { userId: req.user.id, status: 'rejected' };
+    const result = await Account.deleteMany(filter);
+
+    return sendSuccess(res, 200, `Removed ${result.deletedCount} rejected account application(s).`, {
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createAccount,
   getAccounts,
   getAccountById,
+  deleteAccount,
+  clearRejectedAccounts,
 };

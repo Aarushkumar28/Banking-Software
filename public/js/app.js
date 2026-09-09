@@ -203,6 +203,53 @@ function renderNavTabs() {
 // =========================================================
 // Customer Views: Accounts, Transfers, Beneficiaries, Statements
 // =========================================================
+let isRejectedHidden = false;
+
+function toggleHideRejected() {
+  isRejectedHidden = !isRejectedHidden;
+  const toggleBtnText = document.getElementById('toggleRejectedText');
+  if (toggleBtnText) {
+    toggleBtnText.textContent = isRejectedHidden ? 'Show Rejected' : 'Hide Rejected';
+  }
+  loadCustomerAccounts();
+}
+
+async function removeRejectedAccount(accountId, event) {
+  if (event) event.stopPropagation();
+
+  const targetCard = event && event.target ? event.target.closest('.account-card') : null;
+  if (targetCard) {
+    targetCard.classList.add('card-remove-anim');
+  }
+
+  try {
+    const res = await apiCall(`/accounts/${accountId}`, {
+      method: 'DELETE',
+    });
+    showToast(res.message || 'Rejected card removed', 'success');
+    await loadCustomerAccounts();
+  } catch (err) {
+    if (targetCard) targetCard.classList.remove('card-remove-anim');
+    showToast(`Failed to remove card: ${err.message}`, 'danger');
+  }
+}
+
+async function clearAllRejectedAccounts() {
+  if (!confirm('Are you sure you want to remove all rejected account applications?')) {
+    return;
+  }
+
+  try {
+    const res = await apiCall('/accounts/rejected/clear', {
+      method: 'DELETE',
+    });
+    showToast(res.message || 'All rejected cards removed', 'success');
+    await loadCustomerAccounts();
+  } catch (err) {
+    showToast(`Failed to clear rejected accounts: ${err.message}`, 'danger');
+  }
+}
+
 async function loadCustomerAccounts() {
   try {
     const res = await apiCall('/accounts');
@@ -210,24 +257,53 @@ async function loadCustomerAccounts() {
     container.innerHTML = '';
 
     const accounts = res.data.accounts || [];
+    const rejectedAccounts = accounts.filter((a) => a.status === 'rejected');
 
-    if (accounts.length === 0) {
+    // Update Header Toolbar Controls
+    const clearBtn = document.getElementById('clearRejectedBtn');
+    const toggleBtn = document.getElementById('toggleRejectedBtn');
+    const countBadge = document.getElementById('rejectedCountBadge');
+
+    if (rejectedAccounts.length > 0) {
+      if (clearBtn) clearBtn.style.display = 'inline-flex';
+      if (toggleBtn) toggleBtn.style.display = 'inline-flex';
+      if (countBadge) countBadge.textContent = rejectedAccounts.length;
+    } else {
+      if (clearBtn) clearBtn.style.display = 'none';
+      if (toggleBtn) toggleBtn.style.display = 'none';
+    }
+
+    const visibleAccounts = isRejectedHidden
+      ? accounts.filter((a) => a.status !== 'rejected')
+      : accounts;
+
+    if (visibleAccounts.length === 0) {
       container.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
-          <p>No bank accounts found for this profile.</p>
+          <p>${accounts.length > 0 ? 'All rejected cards are hidden.' : 'No bank accounts found for this profile.'}</p>
           <button class="btn btn-primary" style="margin-top: 1rem;" onclick="openNewAccountModal()">Apply to Open Account</button>
         </div>
       `;
       return;
     }
 
-    accounts.forEach((acc) => {
+    visibleAccounts.forEach((acc) => {
+      const isRejected = acc.status === 'rejected';
       const card = document.createElement('div');
-      card.className = `account-card ${acc.type}`;
+      card.className = `account-card ${acc.type} ${isRejected ? 'rejected' : ''}`;
+      card.id = `account-card-${acc._id}`;
+
       card.innerHTML = `
         <div class="account-top">
           <span class="account-chip ${acc.type}">${acc.type} account</span>
-          <span class="status-badge ${acc.status}">${acc.status}</span>
+          <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <span class="status-badge ${acc.status}">${acc.status}</span>
+            ${
+              isRejected
+                ? `<button class="btn-card-dismiss" title="Remove rejected card" onclick="removeRejectedAccount('${acc._id}', event)">✕</button>`
+                : ''
+            }
+          </div>
         </div>
         <div class="account-number">
           <span>A/C:</span>
@@ -239,6 +315,18 @@ async function loadCustomerAccounts() {
           <span>Min Required: $${acc.minBalance.toLocaleString()}</span>
           <span>Daily Limit: $${acc.dailyTransferLimit.toLocaleString()}</span>
         </div>
+        ${
+          isRejected
+            ? `
+            <button class="btn btn-outline-danger btn-sm" style="width: 100%; margin-top: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onclick="removeRejectedAccount('${acc._id}', event)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+              </svg>
+              Remove Rejected Card
+            </button>
+          `
+            : ''
+        }
       `;
       container.appendChild(card);
     });
