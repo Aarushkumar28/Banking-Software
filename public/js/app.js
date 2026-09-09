@@ -130,10 +130,21 @@ async function switchPersona(personaKey) {
 
     showToast(`Logged in as ${currentUser.name} (${currentUser.role})`, 'success');
 
+    // Update status badge to connected
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = document.querySelector('.brand-badge span:last-child');
+    if (statusDot) statusDot.style.background = '#10b981';
+    if (statusText) statusText.textContent = `CIA-3 Core API Online • DB Connected`;
+
     // Build role-appropriate navigation tabs
     renderNavTabs();
   } catch (error) {
-    showToast(`Failed to authenticate ${persona.label}: ${error.message}`, 'danger');
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = document.querySelector('.brand-badge span:last-child');
+    if (statusDot) statusDot.style.background = '#ef4444';
+    if (statusText) statusText.textContent = `Database Unreachable • Check Atlas IP Whitelist`;
+
+    showToast(`⚠️ Database connection failed: Please ensure IP 0.0.0.0/0 is whitelisted in MongoDB Atlas Network Access.`, 'danger');
   }
 }
 
