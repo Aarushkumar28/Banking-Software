@@ -81,6 +81,26 @@ function updateInspector(method, endpoint, requestBody, status, responseBody, el
   inspectorBody.textContent = JSON.stringify(logPayload, null, 2);
 }
 
+function toggleInspector() {
+  const card = document.getElementById('inspectorCard');
+  if (card) {
+    card.classList.toggle('collapsed');
+  }
+}
+
+// Support keyboard accessibility (Enter / Space) on inspector header
+document.addEventListener('DOMContentLoaded', () => {
+  const header = document.getElementById('inspectorHeader');
+  if (header) {
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleInspector();
+      }
+    });
+  }
+});
+
 // =========================================================
 // Toast Notification Engine
 // =========================================================

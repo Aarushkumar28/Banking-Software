@@ -869,6 +869,11 @@ select.form-control option {
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-top: 2rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inspector-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .inspector-header {
@@ -878,6 +883,13 @@ select.form-control option {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.inspector-header:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .inspector-title {
@@ -889,14 +901,52 @@ select.form-control option {
   color: var(--text-muted);
 }
 
+.inspector-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.inspector-toggle-btn:hover {
+  color: #fff;
+}
+
+.inspector-body-container {
+  max-height: 350px;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  overflow: hidden;
+  opacity: 1;
+}
+
+.inspector-card.collapsed .inspector-header {
+  border-bottom: none;
+}
+
+.inspector-card.collapsed .inspector-body-container {
+  max-height: 0;
+  opacity: 0;
+}
+
+.inspector-card.collapsed #inspectorChevron {
+  transform: rotate(-90deg);
+}
+
 .inspector-body {
   padding: 1.25rem;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
   color: #cbd5e1;
-  max-height: 250px;
+  max-height: 280px;
   overflow-y: auto;
   white-space: pre-wrap;
+  margin: 0;
 }
 
 /* Empty State */

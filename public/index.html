@@ -406,9 +406,9 @@
       </div>
     </section>
 
-    <!-- Live API Inspector Card (Always accessible) -->
-    <div class="inspector-card">
-      <div class="inspector-header">
+    <!-- Live API Inspector Banner (Collapsible) -->
+    <div class="inspector-card collapsed" id="inspectorCard">
+      <div class="inspector-header" id="inspectorHeader" onclick="toggleInspector()" role="button" tabindex="0" title="Click to expand/collapse Live API Inspector">
         <span class="inspector-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="16 18 22 12 16 6"></polyline>
@@ -416,10 +416,19 @@
           </svg>
           Live API Inspector (Real-time Backend JSON Envelopes)
         </span>
-        <span id="inspectorStatus" class="status-badge active">READY</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="inspectorStatus" class="status-badge active">READY</span>
+          <button type="button" class="inspector-toggle-btn" id="inspectorToggleBtn" aria-label="Toggle Inspector">
+            <svg id="inspectorChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s ease;">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
       </div>
-      <pre class="inspector-body" id="inspectorBody">// API Request and Response inspector ready.
+      <div class="inspector-body-container" id="inspectorBodyContainer">
+        <pre class="inspector-body" id="inspectorBody">// API Request and Response inspector ready.
 // Click any action or demo persona above to see live backend JSON envelopes.</pre>
+      </div>
     </div>
   </main>
 
